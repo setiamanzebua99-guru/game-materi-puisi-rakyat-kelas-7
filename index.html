@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Edukasi: Pendekar Puisi Rakyat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700&display=swap');
+
+        body {
+            font-family: 'Lora', serif;
+            background-color: #2c1e16; /* Dark brown background */
+            background-image: radial-gradient(#4a3219 15%, transparent 15%), radial-gradient(#4a3219 15%, transparent 15%);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            color: #3e2723;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, .title-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Tampilan perkamen / kertas tua */
+        .parchment {
+            background-color: #fdf5e6;
+            background-image: linear-gradient(to right, #fdf5e6, #f9ebd1, #fdf5e6);
+            border: 4px solid #8b5a2b;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7), inset 0 0 20px rgba(139, 90, 43, 0.3);
+            position: relative;
+            max-width: 600px;
+            width: 95%;
+        }
+
+        .btn-wood {
+            background: linear-gradient(to bottom, #8b5a2b, #5c3a21);
+            color: #fdf5e6;
+            border: 2px solid #3e2723;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+        .btn-wood:hover {
+            background: linear-gradient(to bottom, #a06b35, #704729);
+            transform: translateY(-2px);
+        }
+        .btn-wood:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .option-btn {
+            background: #f4e4c1;
+            border: 2px solid #8b5a2b;
+            color: #3e2723;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover {
+            background: #e6cfa1;
+            border-color: #5c3a21;
+        }
+        
+        .correct { background: #4ade80 !important; color: #064e3b !important; border-color: #064e3b !important; }
+        .wrong { background: #f87171 !important; color: #7f1d1d !important; border-color: #7f1d1d !important; }
+
+        .hidden-screen { display: none !important; }
+
+        .poem-line {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            border-bottom: 1px dashed #d1bfae;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+        }
+        .blank-line {
+            color: #9ca3af;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Layar Utama -->
+    <div id="startScreen" class="parchment p-8 text-center flex flex-col items-center">
+        <div class="w-16 h-16 mb-4 bg-orange-200 rounded-full flex items-center justify-center border-2 border-orange-900">
+            <span class="text-3xl">📜</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-2 text-yellow-900 drop-shadow-sm">Pendekar Puisi Rakyat</h1>
+        <h2 class="text-xl font-semibold mb-6 text-yellow-800">Kelas 7 SMP</h2>
+        
+        <p class="mb-6 text-gray-700 leading-relaxed">
+            Uji pengetahuanmu tentang <b>Pantun, Gurindam</b>, dan <b>Syair</b>. 
+            Lengkapi baris yang rumpang dengan memperhatikan makna dan rima sajaknya!
+        </p>
+
+        <button onclick="startGame()" class="btn-wood px-8 py-3 rounded-full text-xl font-bold tracking-wider">
+            MULAI BERMAIN
+        </button>
+    </div>
+
+    <!-- Layar Bermain -->
+    <div id="gameScreen" class="parchment p-6 text-center flex flex-col hidden-screen">
+        <div class="flex justify-between items-center border-b-2 border-yellow-900 pb-3 mb-4">
+            <div class="font-bold text-lg text-yellow-900">Soal: <span id="qNumber">1</span>/<span id="qTotal">5</span></div>
+            <div class="font-bold text-lg text-yellow-900">Skor: <span id="score">0</span></div>
+        </div>
+
+        <div class="mb-2">
+            <span id="poemType" class="bg-yellow-800 text-yellow-100 px-3 py-1 rounded text-sm font-bold uppercase tracking-widest">PANTUN</span>
+        </div>
+
+        <div id="poemContainer" class="my-6 text-left max-w-sm mx-auto w-full italic font-medium text-gray-800">
+            <!-- Teks puisi akan dirender di sini -->
+        </div>
+
+        <div id="optionsContainer" class="flex flex-col gap-3 mt-4">
+            <!-- Tombol pilihan akan dirender di sini -->
+        </div>
+    </div>
+
+    <!-- Layar Akhir -->
+    <div id="endScreen" class="parchment p-8 text-center flex flex-col items-center hidden-screen">
+        <h1 id="endTitle" class="text-4xl font-bold mb-4 text-yellow-900">Selesai!</h1>
+        <p class="text-xl mb-2 text-gray-700">Skor Akhir Kamu:</p>
+        <div class="text-6xl font-bold text-yellow-700 mb-6 drop-shadow-md" id="finalScore">100</div>
+        
+        <p id="endMessage" class="mb-8 text-lg font-medium text-gray-800 italic">
+            "Luar biasa! Kamu adalah pendekar puisi sejati!"
+        </p>
+
+        <button onclick="resetGame()" class="btn-wood px-8 py-3 rounded-full text-lg font-bold tracking-wider">
+            MAIN LAGI
+        </button>
+    </div>
+
+<script>
+    // --- Data Bank Soal Puisi Rakyat ---
+    const questions = [
+        {
+            type: "PANTUN (Sajak a-b-a-b)",
+            lines: [
+                "Jalan-jalan ke kota Blitar,",
+                "Jangan lupa membeli sukun.",
+                "Kalau ingin menjadi pintar,",
+                "___"
+            ],
+            answer: "Kamu harus belajar tekun.",
+            options: [
+                "Kamu harus belajar tekun.",
+                "Mari kita hidup yang rukun.",
+                "Jangan suka duduk melamun."
+            ]
+        },
+        {
+            type: "GURINDAM (Sajak a-a)",
+            lines: [
+                "Barang siapa tiada memegang agama,",
+                "___"
+            ],
+            answer: "Sekali-kali tiada boleh dibilangkan nama.",
+            options: [
+                "Sekali-kali tiada boleh dibilangkan nama.",
+                "Pasti kelak akan masuk surga.",
+                "Hidupnya akan selalu bahagia."
+            ]
+        },
+        {
+            type: "PANTUN (Sajak a-b-a-b)",
+            lines: [
+                "Air surut memungut bayam,",
+                "Sayur diisi ke dalam kantung.",
+                "___",
+                "Melihat botak minta digulung."
+            ],
+            answer: "Jangan diikuti tabiat ayam,",
+            options: [
+                "Jangan diikuti tabiat ayam,",
+                "Sungguh elok si burung pipit,",
+                "Mari bernyanyi bersenandung,"
+            ]
+        },
+        {
+            type: "SYAIR (Sajak a-a-a-a)",
+            lines: [
+                "Inilah gerangan suatu madah,",
+                "Mengarangkan syair terlalu indah,",
+                "Membetuli jalan tempat berpindah,",
+                "___"
+            ],
+            answer: "Di sanalah iktibar diperbaiki sudah.",
+            options: [
+                "Di sanalah iktibar diperbaiki sudah.",
+                "Janganlah engkau berbuat salah.",
+                "Agar hidupmu menjadi berkah."
+            ]
+        },
+        {
+            type: "GURINDAM (Sajak a-a)",
+            lines: [
+                "___",
+                "Itulah tanda orang yang mulia."
+            ],
+            answer: "Barang siapa berbuat jasa,",
+            options: [
+                "Barang siapa berbuat jasa,",
+                "Barang siapa mencari ilmu,",
+                "Apabila banyak mencela orang,"
+            ]
+        }
+    ];
+
+    // Variabel State Game
+    let currentQuestionIndex = 0;
+    let score = 0;
+    const POINTS_PER_QUESTION = 20;
+    let gameQuestions = [];
+
+    // Elemen DOM
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const endScreen = document.getElementById('endScreen');
+    
+    const poemType = document.getElementById('poemType');
+    const poemContainer = document.getElementById('poemContainer');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const qNumberLabel = document.getElementById('qNumber');
+    const qTotalLabel = document.getElementById('qTotal');
+    const scoreLabel = document.getElementById('score');
+
+    // Fungsi Mengacak Array (Fisher-Yates)
+    function shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    function startGame() {
+        startScreen.classList.add('hidden-screen');
+        endScreen.classList.add('hidden-screen');
+        gameScreen.classList.remove('hidden-screen');
+        
+        score = 0;
+        currentQuestionIndex = 0;
+        
+        // Acak urutan soal
+        gameQuestions = shuffleArray(questions);
+        qTotalLabel.innerText = gameQuestions.length;
+        
+        updateScore();
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = gameQuestions[currentQuestionIndex];
+        qNumberLabel.innerText = currentQuestionIndex + 1;
+        poemType.innerText = q.type;
+
+        // Render Puisi
+        poemContainer.innerHTML = "";
+        q.lines.forEach(line => {
+            const div = document.createElement('div');
+            div.className = "poem-line";
+            if (line === "___") {
+                div.innerHTML = "<span class='blank-line'>[ .................................................. ]</span>";
+            } else {
+                div.innerText = line;
+            }
+            poemContainer.appendChild(div);
+        });
+
+        // Render Pilihan (Diacak)
+        optionsContainer.innerHTML = "";
+        const shuffledOptions = shuffleArray(q.options);
+        
+        shuffledOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn w-full py-3 px-4 rounded text-left font-semibold shadow-sm";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, opt, q.answer);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(btnElement, selectedOpt, correctOpt) {
+        // Nonaktifkan semua tombol agar tidak diklik dua kali
+        const allBtns = optionsContainer.querySelectorAll('button');
+        allBtns.forEach(b => b.disabled = true);
+
+        if (selectedOpt === correctOpt) {
+            btnElement.classList.add('correct');
+            score += POINTS_PER_QUESTION;
+            updateScore();
+        } else {
+            btnElement.classList.add('wrong');
+            // Tandai jawaban yang benar
+            allBtns.forEach(b => {
+                if (b.innerText === correctOpt) {
+                    b.classList.remove('option-btn');
+                    b.classList.add('correct');
+                    b.style.border = "2px solid #064e3b";
+                }
+            });
+        }
+
+        // Lanjut ke soal berikutnya setelah delay 1.5 detik
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < gameQuestions.length) {
+                loadQuestion();
+            } else {
+                showEndScreen();
+            }
+        }, 2000);
+    }
+
+    function updateScore() {
+        scoreLabel.innerText = score;
+    }
+
+    function showEndScreen() {
+        gameScreen.classList.add('hidden-screen');
+        endScreen.classList.remove('hidden-screen');
+        
+        document.getElementById('finalScore').innerText = score;
+        
+        const msg = document.getElementById('endMessage');
+        if (score === 100) {
+            msg.innerText = "Sempurna! Pengetahuanmu tentang rima dan bait sungguh luar biasa bak Pujangga!";
+        } else if (score >= 60) {
+            msg.innerText = "Kerja bagus! Kamu sudah memahami dasar-dasar pantun dan gurindam dengan baik.";
+        } else {
+            msg.innerText = "Jangan menyerah! Ayo baca lagi materi Puisi Rakyat dan coba lagi!";
+        }
+    }
+
+    function resetGame() {
+        startGame();
+    }
+</script>
+</body>
+</html>
